@@ -5,27 +5,27 @@ using TMPro;
 
 public class LrcLyricsDisplay : MonoBehaviour
 {
-    public TextMeshProUGUI[] textLines; // 歌詞を表示するTextMeshProUGUIオブジェクト（3行分）
+    public TextMeshProUGUI[] textField; // 歌詞を表示するTextMeshProUGUIオブジェクト（3行分）
     public string lrcFileName = "Lrc-BirthdaySong.txt"; // LRCファイル名（Assetsフォルダ内）
-    private List<LyricLine> lyrics = new List<LyricLine>(); // 歌詞情報を格納するリスト
+    private List<LyricLineInfo> lyricsList = new List<LyricLineInfo>(); // 歌詞情報を格納するリスト
     private int currentLyricIndex = 0; // 現在の歌詞インデックス
     private float timeInit = 0; // 歌の始まりの時刻
     private Color[] colors = { Color.red, Color.green, Color.yellow }; // 使用する3色
     private string[] colorNames = { "Red", "Green", "Yellow" }; // 色名
 
     [System.Serializable]
-    public class LyricPart
+    public class LyricPartInfo
     {
         public string word; // 単語
         public Color color; // 割り当てられた色
     }
 
     [System.Serializable]
-    public class LyricLine
+    public class LyricLineInfo
     {
-        public float time; // 表示時刻（秒単位）
+        public float startTime; // 表示時刻（秒単位）
         public string text; // 歌詞内容
-        public List<LyricPart> parts = new List<LyricPart>(); // 単語ごとの色情報
+        public List<LyricPartInfo> parts = new List<LyricPartInfo>(); // 単語ごとの色情報
     }
 
     void Start()
@@ -33,23 +33,44 @@ public class LrcLyricsDisplay : MonoBehaviour
         LoadLrcFile(); // LRCファイルを読み込む
         AssignRandomColors(); // 単語ごとにランダムに色を割り当て
         ExportColorLog(); // 色分け情報を記録
-        lyrics.Add(new LyricLine { time = timeInit, text = "" });
+        lyricsList.Add(new LyricLineInfo { startTime = timeInit, text = "" });
         UpdateLyricsDisplay(); // 初期表示を更新
+        Debug.Log("lyrics.Count: " + lyricsList.Count);
     }
 
+    /// <summary>
+    /// Update 関数：自動的に一定間隔で呼び出される関数
+    /// 現在の時刻に基づいて歌詞を更新
+    /// </summary>
     void Update()
     {
-        // 現在の時刻に基づいて歌詞を更新
+        // if (lyricsList.Count: 7) then (currentLyricIndex: 0 - 6)
+        int numTotalLine = lyricsList.Count;
+
+        // Quit game if finish to display all lyrics 
+        if (currentLyricIndex >= numTotalLine - 1)
+        {
+            ExitApplication();
+        }
+
+        // currentTime: 現在のシーンがロードされてからの経過時間を取得
         float currentTime = Time.timeSinceLevelLoad;
 
         // 次の歌詞行に進むべきタイミングか確認
-        if (currentLyricIndex < lyrics.Count - 1 && currentTime >= lyrics[currentLyricIndex + 1].time)
+        LyricLineInfo nextLine = lyricsList[currentLyricIndex + 1];
+        if (currentLyricIndex < numTotalLine - 2 && currentTime >= nextLine.startTime)
         {
+            Debug.Log("currentLyricIndex: " + currentLyricIndex + ", " + lyricsList[currentLyricIndex].text);
+            // Update the index of lyrics
             currentLyricIndex++;
+            // Display the lyrics of NEXT line
             UpdateLyricsDisplay();
         }
     }
 
+    /// <summary>
+    /// lyricsList 作成
+    /// </summary>
     void LoadLrcFile()
     {
         string path = Path.Combine(Application.dataPath, lrcFileName);
@@ -60,6 +81,8 @@ public class LrcLyricsDisplay : MonoBehaviour
         }
 
         string[] lines = File.ReadAllLines(path);
+        // 最終行時刻記録用変数
+        float timeEndLine = 0f;
 
         foreach (string line in lines)
         {
@@ -71,28 +94,38 @@ public class LrcLyricsDisplay : MonoBehaviour
                 string[] timeComponents = timePart.Split(':');
                 float minutes = float.Parse(timeComponents[0]);
                 float seconds = float.Parse(timeComponents[1]);
-                float totalSeconds = timeInit + minutes * 60 + seconds;
+                float startTime = timeInit + minutes * 60 + seconds;
 
                 // 歌詞部分を取得
                 string textPart = line.Substring(line.IndexOf("]") + 1);
 
                 // リストに追加
-                lyrics.Add(new LyricLine { time = totalSeconds, text = textPart });
+                lyricsList.Add(new LyricLineInfo { startTime = startTime, text = textPart });
+                timeEndLine = startTime;
             }
         }
+        // 最後に終わりの指示 EOF てきな
+        lyricsList.Add(new LyricLineInfo { startTime = timeEndLine + 4, text = "GAME END." });
+        lyricsList.Add(new LyricLineInfo { startTime = timeEndLine + 4, text = "" });
+        // 
+        Debug.Log("lyricsList: \n");
+        foreach (LyricLineInfo lyricsLine in lyricsList)
+        {
+            Debug.Log(lyricsLine.startTime + ", " + lyricsLine.text + "\n");
+        }
 
-        Debug.Log($"Loaded {lyrics.Count} lyrics from {lrcFileName}");
+        Debug.Log($"Loaded {lyricsList.Count} lyrics from {lrcFileName}");
     }
 
     void AssignRandomColors()
     {
-        foreach (var line in lyrics)
+        foreach (var line in lyricsList)
         {
-            string[] words = line.text.Split(' '); // 単語ごとに分割
-            foreach (var word in words)
+            string[] wordList = line.text.Split(' '); // 単語ごとに分割
+            foreach (var word in wordList)
             {
                 int randomIndex = Random.Range(0, colors.Length); // ランダムで色を選択
-                line.parts.Add(new LyricPart { word = word, color = colors[randomIndex] });
+                line.parts.Add(new LyricPartInfo { word = word, color = colors[randomIndex] });
             }
         }
     }
@@ -103,9 +136,9 @@ public class LrcLyricsDisplay : MonoBehaviour
         using (StreamWriter writer = new StreamWriter(logPath))
         {
             writer.WriteLine("Lyrics Color Log:");
-            foreach (var line in lyrics)
+            foreach (var line in lyricsList)
             {
-                writer.WriteLine($"[{line.time:00.00}]");
+                writer.WriteLine($"[{line.startTime:00.00}]");
                 foreach (var part in line.parts)
                 {
                     string colorName = ColorToName(part.color);
@@ -120,7 +153,7 @@ public class LrcLyricsDisplay : MonoBehaviour
     {
         if (color == Color.red) return "RED";
         if (color == Color.green) return "GREEN";
-        if (color == Color.yellow) return "Yellow";
+        if (color == Color.yellow) return "YELLOW";
         return "UNKNOWN";
     }
 
@@ -129,38 +162,50 @@ public class LrcLyricsDisplay : MonoBehaviour
         // 真ん中の行を更新するためのインデックス
         int middleLineIndex = 1;
 
-        for (int i = 0; i < textLines.Length; i++)
+        for (int i = 0; i < textField.Length; i++)
         {
             // 表示する歌詞行を決定（前後1行 + 現在行）
             int lyricIndex = currentLyricIndex + i - middleLineIndex;
 
-            if (lyricIndex >= 0 && lyricIndex < lyrics.Count)
+            if (lyricIndex >= 0 && lyricIndex < lyricsList.Count)
             {
                 // テキストを色付きで構築
                 string coloredText = "";
-                foreach (var part in lyrics[lyricIndex].parts)
+                //string coloredText = (currentLyricIndex+1).ToString();
+                foreach (var part in lyricsList[lyricIndex].parts)
                 {
                     string hexColor = ColorUtility.ToHtmlStringRGB(part.color);
                     coloredText += $"<color=#{hexColor}>{part.word}</color> ";
                 }
 
-                textLines[i].text = coloredText.Trim();
+                textField[i].text = coloredText.Trim();
 
                 // 真ん中の行は不透明、それ以外は半透明
                 if (i == middleLineIndex)
                 {
-                    textLines[i].color = new Color(1f, 1f, 1f, 1f); // 不透明
+                    textField[i].color = new Color(1f, 1f, 1f, 1f); // 不透明
                 }
                 else
                 {
-                    textLines[i].color = new Color(1f, 1f, 1f, 0.2f); // 半透明
+                    textField[i].color = new Color(1f, 1f, 1f, 0.2f); // 半透明
                 }
             }
             else
             {
                 // 歌詞がない場合は空白に設定
-                textLines[i].text = "";
+                textField[i].text = "";
             }
         }
+    }
+
+    void ExitApplication()
+    {
+#if UNITY_EDITOR
+        // Unityエディタの場合、再生モードを停止
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+    // ランタイムの場合、アプリケーションを終了
+    Application.Quit();
+#endif
     }
 }

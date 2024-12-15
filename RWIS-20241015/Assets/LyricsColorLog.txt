@@ -1,0 +1,26 @@
+Lyrics Color Log:
+[00.00]
+  "Happy" - GREEN
+  "birthday" - GREEN
+  "to" - YELLOW
+  "you" - RED
+[03.75]
+  "Happy" - RED
+  "birthday" - GREEN
+  "to" - YELLOW
+  "you" - GREEN
+[07.50]
+  "Happy" - RED
+  "birthday" - YELLOW
+  "dear" - RED
+  "Lily" - GREEN
+[11.25]
+  "Happy" - RED
+  "birthday" - GREEN
+  "to" - GREEN
+  "you" - YELLOW
+[15.25]
+  "GAME" - YELLOW
+  "END." - YELLOW
+[15.25]
+  "" - GREEN
