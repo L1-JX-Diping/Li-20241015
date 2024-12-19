@@ -1,0 +1,5 @@
+# bpm[120], beat[3], intro[8]
+2[0,1,3,4]Happy birthday to you
+2[0,1,3,4]Happy birthday to you
+2[0,1,3,4]Happy birthday dear Lily
+2[0,1,3,4]Happy birthday to you
