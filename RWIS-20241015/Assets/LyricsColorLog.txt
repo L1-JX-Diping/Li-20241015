@@ -1,26 +1,28 @@
 Lyrics Color Log:
 [00.00]
-  "Happy" - GREEN
-  "birthday" - GREEN
-  "to" - YELLOW
-  "you" - RED
-[03.75]
-  "Happy" - RED
-  "birthday" - GREEN
-  "to" - YELLOW
-  "you" - GREEN
-[07.50]
-  "Happy" - RED
-  "birthday" - YELLOW
-  "dear" - RED
-  "Lily" - GREEN
-[11.25]
-  "Happy" - RED
-  "birthday" - GREEN
-  "to" - GREEN
-  "you" - YELLOW
-[15.25]
-  "GAME" - YELLOW
-  "END." - YELLOW
-[15.25]
-  "" - GREEN
+  "" - RGBA(1.000, 0.922, 0.016, 1.000)
+[04.00]
+  "Happy" - RGBA(1.000, 0.922, 0.016, 1.000)
+  "birthday" - RGBA(1.000, 0.922, 0.016, 1.000)
+  "to" - RGBA(1.000, 0.000, 0.000, 1.000)
+  "you" - RGBA(1.000, 0.000, 0.000, 1.000)
+[07.00]
+  "Happy" - RGBA(1.000, 0.922, 0.016, 1.000)
+  "birthday" - RGBA(1.000, 0.000, 0.000, 1.000)
+  "to" - RGBA(0.000, 1.000, 0.000, 1.000)
+  "you" - RGBA(1.000, 0.922, 0.016, 1.000)
+[10.00]
+  "Happy" - RGBA(1.000, 0.000, 0.000, 1.000)
+  "birthday" - RGBA(1.000, 0.000, 0.000, 1.000)
+  "dear" - RGBA(1.000, 0.922, 0.016, 1.000)
+  "Lily" - RGBA(0.000, 1.000, 0.000, 1.000)
+[13.00]
+  "Happy" - RGBA(1.000, 0.922, 0.016, 1.000)
+  "birthday" - RGBA(1.000, 0.922, 0.016, 1.000)
+  "to" - RGBA(1.000, 0.922, 0.016, 1.000)
+  "you" - RGBA(1.000, 0.922, 0.016, 1.000)
+[16.00]
+  "GAME" - RGBA(1.000, 0.000, 0.000, 1.000)
+  "END." - RGBA(1.000, 0.922, 0.016, 1.000)
+[18.00]
+  "" - RGBA(1.000, 0.000, 0.000, 1.000)
