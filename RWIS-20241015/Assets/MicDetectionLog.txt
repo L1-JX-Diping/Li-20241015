@@ -1,0 +1,33 @@
+# time, mic, volume
+4.00, マイク (Logi C615 HD WebCam), 0.1553
+4.18, マイク (Logi C615 HD WebCam), 0.5318
+4.51, マイク (Logi C615 HD WebCam), 0.2384
+4.67, マイク (Logi C615 HD WebCam), 0.4339
+7.00, マイク (Logi C615 HD WebCam), 0.2232
+7.21, マイク (Logi C615 HD WebCam), 0.2456
+7.51, マイク (Logi C615 HD WebCam), 0.3808
+7.68, マイク (Logi C615 HD WebCam), 0.2497
+10.01, マイク (Logi C615 HD WebCam), 0.2579
+10.01, マイク配列 (Realtek(R) Audio), 0.9898
+10.01, マイク (Logi C310 HD WebCam), 0.2363
+10.18, マイク (Logi C615 HD WebCam), 0.5249
+10.18, マイク配列 (Realtek(R) Audio), 0.4408
+10.18, マイク (Logi C310 HD WebCam), 0.2070
+10.50, マイク (Logi C615 HD WebCam), 0.1355
+10.50, マイク配列 (Realtek(R) Audio), 0.2670
+10.50, マイク (Logi C310 HD WebCam), 0.1718
+10.68, マイク (Logi C615 HD WebCam), 0.8579
+10.68, マイク配列 (Realtek(R) Audio), 0.5693
+10.68, マイク (Logi C310 HD WebCam), 0.1636
+13.01, マイク (Logi C615 HD WebCam), 0.6297
+13.01, マイク配列 (Realtek(R) Audio), 0.3634
+13.01, マイク (Logi C310 HD WebCam), 0.2440
+13.18, マイク (Logi C615 HD WebCam), 1.0000
+13.18, マイク配列 (Realtek(R) Audio), 0.3350
+13.18, マイク (Logi C310 HD WebCam), 0.1982
+13.51, マイク (Logi C615 HD WebCam), 0.3204
+13.51, マイク配列 (Realtek(R) Audio), 0.1748
+13.51, マイク (Logi C310 HD WebCam), 0.1400
+13.67, マイク (Logi C615 HD WebCam), 0.4548
+13.67, マイク配列 (Realtek(R) Audio), 0.1159
+13.67, マイク (Logi C310 HD WebCam), 0.1397

@@ -1,0 +1,2 @@
+GREEN, マイク (Logi C615 HD WebCam)
+RED, マイク (Logi C310 HD WebCam)

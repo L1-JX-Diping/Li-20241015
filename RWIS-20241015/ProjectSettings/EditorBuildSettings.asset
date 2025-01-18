@@ -4,5 +4,20 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Home.unity
+    guid: 3a54c0a029b900f41b81c4635201c05c
+  - enabled: 1
+    path: Assets/Scenes/AssignColor.unity
+    guid: a52875200e5387f4b8c5de25f4f08001
+  - enabled: 1
+    path: Assets/Scenes/DisplayLyrics.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Scenes/ComingSoon.unity
+    guid: f0dc4fe96ddd7dc4ca8bb147d5daece6
+  - enabled: 1
+    path: Assets/Scenes/Score.unity
+    guid: 6b62e8d2a9d237249b95a7a4ef85299c
   m_configObjects: {}

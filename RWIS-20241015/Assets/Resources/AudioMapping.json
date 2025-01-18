@@ -1,0 +1,7 @@
+{
+    "paths": {
+        "Birthday Song": "Audio/BirthdaySong",
+        "ABC Song": "Audio/Default",
+        "Xmas Song": "Audio/Default"
+    }
+}
