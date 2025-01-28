@@ -14,13 +14,7 @@ public class HomeSceneManager : MonoBehaviour
     /* private な変数 */
     private string _songListFileName = "SongTitleList.txt"; // リストファイルの名前（Assetsフォルダ内）
     private string _outputFileName = "GameInfo.txt"; // 記録ファイルのパス
-    private string _songTitle = "Birthday Song";
-
-    public string GameInfoFileName 
-    { 
-        get => _outputFileName; 
-        set => _outputFileName = value; 
-    }
+    //private string _songTitle = "Birthday Song";
 
     void Start()
     {
@@ -63,7 +57,8 @@ public class HomeSceneManager : MonoBehaviour
 
     void SwitchScene()
     {
-        if (_songTitle == "Birthday Song")
+        string songTitle = GetSongTitle();
+        if (songTitle == "Birthday Song")
         {
             // "Birthday Song" っであれば
             // Mic-Color 対応をユーザに見せるシーン "AssignColor" を開く
@@ -139,17 +134,17 @@ public class HomeSceneManager : MonoBehaviour
     void SaveGameInfo()
     {
         // 記録ファイルのパスを取得
-        string filePath = Path.Combine(Application.dataPath, GameInfoFileName);
-        _songTitle = GetSongTitle();
+        string filePath = Path.Combine(Application.dataPath, _outputFileName);
+        string songTitle = GetSongTitle();
         string playerCount = GetPlayerNum();
 
         // 複数行を一度に書き込む
-        string[] lines = { _songTitle, playerCount }; // 配列に各行の内容を格納
+        string[] lines = { songTitle, playerCount }; // 配列に各行の内容を格納
         // ファイル 1 行目に歌の名前を記録
         // ファイル 2 行目に参加人数を記録
         File.WriteAllLines(filePath, lines); // 全行を一括で書き込む
 
-        Debug.Log($"Song title and player number saved:\n{_songTitle}\n{playerCount}");
+        Debug.Log($"Song title and player number saved:\n{songTitle}\n{playerCount}");
     }
 
     // Update is called once per frame

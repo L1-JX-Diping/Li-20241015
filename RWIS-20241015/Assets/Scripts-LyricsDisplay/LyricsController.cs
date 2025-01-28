@@ -3,13 +3,10 @@ using System.IO;
 using UnityEngine;
 using TMPro;
 using System.Text.RegularExpressions;
-using UnityEditor.Experimental.GraphView;
-using System;
-using Unity.VisualScripting;
-using System.Drawing;
 using Color = UnityEngine.Color;
 using Random = UnityEngine.Random;
 using ColorUtility = UnityEngine.ColorUtility;
+using UnityEngine.UI;
 
 
 public class LyricsController : MonoBehaviour
@@ -18,29 +15,27 @@ public class LyricsController : MonoBehaviour
     public TextMeshProUGUI[] _textField; // 歌詞を表示するTextMeshProUGUIオブジェクト（3行分）
 
     /* private な変数たち */
+    private string _markDictFileName = "MarkColorDict.txt";
+    //private string _songTitle = "";
+    //private int _playerCount = 0;
+    // 色弱用 GREEN, *(=Heart) 色とマークの対応
+    private Dictionary<string, string> _markDict = new Dictionary<string, string>(); 
     private string _lyricsFileName = "Lyrics-BirthdaySong.txt"; // 入力ファイル名（Assetsフォルダ内）
     private List<LyricLineInfo> _lyricsList = new List<LyricLineInfo>(); // 歌詞情報(表示開始時刻＋表示する歌詞)を格納するリスト
-    private List<float> _timeList = new List<float>();
     private float _loadingTime = 0.8f; // time lag
     private int _currentLyricIndex = 0; // 現在の歌詞インデックス
     private float _clock = 3f; // Second per Beat
     private float _beat = 4; // 何拍子か？ Birthday song は 3 拍子
     private string _eofText = "GAME END.";
     private float _lineStartTime = 0f; // intro 前奏終了時刻 = 歌詞表示(のスクロール用時刻計算)開始時刻
-    private Color[] _colorList = { Color.red, Color.green, Color.yellow }; // 使用する3色
-    private string _titleFilePath = "SongToPlay.txt";
-    private string _songTitle = "";
+    // 使用する3色
+    private Color[] _colorList = 
+    { 
+        Color.red, 
+        Color.green, 
+        Color.yellow 
+    }; 
     private int _indexForNumList = 0;
-
-    // MicColorInfo.txt を読み込んで色のリスト作成・スコア計算する必要
-    private string _micColorInfoFileName = "MicColorInfo.txt"; // マイクとパート色の対応が記されたファイル名
-                                                               // MicColorInfo.txt からマイクとパート色の対応を Dictionary に格納
-                                                               // PartLog.txt から時刻と正解のパート色情報を取得
-                                                               // MicDetectionLog.txt から時刻と使用されたマイクの情報取得
-                                                               // Dictionary 使ってマイクの部分 パート色 に差し替えて変数に格納
-                                                               // Volumeでその時刻どのマイク(色)か特定
-                                                               // PartLog.txt, MicDetectionLog.txt 照合することでスコア計算
-                                                               // 注意: Dictionary にない色は、自動的に正解したこととして計算
 
     /// <summary>
     /// Which song do you want to play? Set/Get the FILE NAME
@@ -84,6 +79,7 @@ public class LyricsController : MonoBehaviour
         public float timing; // タイミング
         public string word; // 単語
         public Color color; // 割り当てられた色
+        public string mark; // 色弱用: 割り当てられた色に対応するマーク
     }
 
     [System.Serializable]
@@ -96,58 +92,13 @@ public class LyricsController : MonoBehaviour
 
     void Start()
     {
+        InitMarkDict(); // パートと Mark の対応作成
+        InitAvatarColor(); // 画面上にアバターの色を反映する
         LoadLyricsFile(); // ファイルを読み込む
-        // AssignRandomColors(); // 単語ごとにランダムに色を割り当て
+
         ExportColorLog(); // 色分け情報を記録
         ExportPartLog(); // パート分け情報を記録
         UpdateLyricsDisplay(); // 初期表示を更新
-
-        //foreach (LyricLineInfo line in LyricsList)
-        //{
-        //    LyricPartInfo part = line.partList[0];
-        //    Debug.Log($"timing: {part.timing}, word: {part.word}, color: {part.color}");
-        //}
-
-        // Load infomation (for the game) from Home Scene 
-        //LoadGameInfo();
-
-    }
-
-    private void LoadGameInfo()
-    {
-        // Home シーンにある変数にアクセスしたい
-        HomeSceneManager homeSceneManager = FindObjectOfType<HomeSceneManager>();
-
-        if (homeSceneManager != null)
-        {
-            // Song title, Player num などのゲームに必要な情報が入ったファイルの名前を取得
-            // publicプロパティ経由でprivate変数を取得
-            string filename = homeSceneManager.GameInfoFileName; // 今のところ "GameInfo.txt"
-
-            // Play する歌名をファイルから読み込み
-            string songTitle = "";
-            //LyricsFileName = "Lyrics-" + songTitle.Replace(" ", "") + ".txt";
-
-            Debug.Log($"Retrieved filename: {filename}");
-        }
-        else
-        {
-            Debug.LogError("homeSceneManager not found in the current scene.");
-        }
-
-        // Play する歌名をファイルから読み込み
-        // XML ファイルにできるかも
-        // 空白くっつける操作必要 Birthday Song なら BirthdaySong みたいに
-        //if (File.Exists(_titleFilePath))
-        //{
-        //    _songTitle = File.ReadAllLines(_titleFilePath).ToString();
-        //    Debug.Log($"Loaded {_songTitle} songs from {_titleFilePath}");
-        //}
-        //else
-        //{
-        //    Debug.LogError($"Song list file not found: {_titleFilePath}");
-        //    return;
-        //}
     }
 
     void Update()
@@ -160,6 +111,50 @@ public class LyricsController : MonoBehaviour
         {
             _currentLyricIndex++;
             UpdateLyricsDisplay();
+        }
+    }
+
+    void InitAvatarColor()
+    {
+        foreach (var info in _markDict)
+        {
+            string colorName = info.Key;
+            Color color = NameToColor(colorName);
+            string markName = info.Value;
+            //string mark = MarkToChar(markName);
+            Debug.Log($"from _markDict: {colorName}, {markName}");
+            ReflectToAvatar(markName, color); // Heart, Color.green
+        }
+        // Club 
+        ReflectToAvatar("Club", Color.gray);
+    }
+
+    void ReflectToAvatar(string avatarName, Color assignedColor)
+    {
+        //objName = "Avatar1" 
+        // Canvas内の objName オブジェクトを探す
+        GameObject avatarObject = GameObject.Find(avatarName);
+
+        // オブジェクトが見つかった場合
+        if (avatarObject != null)
+        {
+            // Imageコンポーネントを取得
+            Image avatarImage = avatarObject.GetComponent<Image>();
+
+            if (avatarImage != null)
+            {
+                // ImageのColorプロパティに色を設定
+                avatarImage.color = assignedColor;
+                Debug.Log($"Color {assignedColor} applied to {avatarName}.");
+            }
+            else
+            {
+                Debug.LogError($"{avatarName} does not have an Image component.");
+            }
+        }
+        else
+        {
+            Debug.LogError($"{avatarName} object not found in the scene.");
         }
     }
 
@@ -180,7 +175,7 @@ public class LyricsController : MonoBehaviour
                 foreach (LyricPartInfo part in LyricsList[lyricIndex].partList)
                 {
                     string hexColor = ColorUtility.ToHtmlStringRGB(part.color);
-                    coloredText += $"<color=#{hexColor}>{part.word}</color> ";
+                    coloredText += $"<color=#{hexColor}>{part.mark}{part.word}</color> ";
                 }
 
                 _textField[i].text = coloredText.Trim();
@@ -201,6 +196,50 @@ public class LyricsController : MonoBehaviour
                 _textField[i].text = "";
             }
         }
+    }
+
+    void InitMarkDict()
+    {
+        // ファイルパスを取得
+        string filePath = Path.Combine(Application.dataPath, _markDictFileName);
+
+        // ファイルの存在確認
+        if (!File.Exists(filePath))
+        {
+            Debug.LogError($"File not found: {filePath}");
+            return;
+        }
+
+        // ファイルを行ごとに読み込む
+        string[] lineList = File.ReadAllLines(filePath);
+
+        foreach (string line in lineList)
+        {
+            // カンマで分割
+            string[] pairColorMark = line.Split(',');
+
+            if (pairColorMark.Length == 2)
+            {
+                string colorName = pairColorMark[0].Trim();  // 1列目: colorName (例: GREEN)
+                string markName = pairColorMark[1].Trim();   // 3列目: markName (例: Spade)
+
+                // Dictionaryに追加
+                if (!_markDict.ContainsKey(colorName))
+                {
+                    _markDict[colorName] = markName;
+                }
+                else
+                {
+                    Debug.LogWarning($"Duplicate color entry found: {colorName}, ignoring the second entry.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"Invalid line format: {line}");
+            }
+        }
+
+        Debug.Log($"Initialized _markDict with {_markDict.Count} entries.");
     }
 
     void LoadLyricsFile()
@@ -336,12 +375,18 @@ public class LyricsController : MonoBehaviour
             // generate part List
             string word = wordList[index];
             Color color = _colorList[randomNumList[_indexForNumList]];
+            string colorName = ColorToName(color);
+            string markName = _markDict[colorName];
+            string mark = MarkToChar(markName); // markName to mark (例: ♠)
+            Debug.Log($"add _markDict: {colorName}, {mark}");
+
             // part 情報格納
             LyricPartInfo part = new LyricPartInfo
             {
                 timing = partStartTime,
                 word = word,
-                color = color
+                color = color,
+                mark = mark
             };
             partInfoList.Add(part);
             index++;
@@ -458,11 +503,63 @@ public class LyricsController : MonoBehaviour
         Debug.Log($"Color log saved to {logPath}");
     }
 
+    /// <summary>
+    /// GET color name from color (Type: Color)
+    /// </summary>
+    /// <param name="color"></param>
+    /// <returns></returns>
     string ColorToName(Color color)
     {
         if (color == Color.red) return "RED";
         if (color == Color.green) return "GREEN";
         if (color == Color.yellow) return "YELLOW";
+        if (color == Color.blue) return "BLUE";
+
         return "UNKNOWN";
     }
+
+    /// <summary>
+    /// GET color from color name (Type: string)
+    /// </summary>
+    /// <param name="colorName"></param>
+    /// <returns></returns>
+    Color NameToColor(string colorName)
+    {
+        if (colorName == "RED") return Color.red;
+        if (colorName == "GREEN") return Color.green;
+        if (colorName == "YELLOW") return Color.yellow;
+        if (colorName == "BLUE") return Color.blue;
+
+        return Color.white;
+    }
+
+
+    string MarkToChar(string markName)
+    {
+        if (markName == "Heart") return "♥";
+        if (markName == "Spade") return "♠";
+        if (markName == "Diamond") return "♦";
+        if (markName == "Club") return "♣";
+
+        return "*"; // 全員で歌う部分
+    }
+
+    //string MarkToChar(string markName)
+    //{
+    //    if (markName == "Heart") return "*";
+    //    if (markName == "Spade") return "!";
+    //    if (markName == "Diamond") return "+";
+    //    if (markName == "Club") return "#";
+
+    //    string chorusMark = "";
+    //    int i = 0;
+    //    while (i < _playerCount)
+    //    {
+    //        chorusMark += "<";
+    //        i++;
+    //    }
+    //    return chorusMark; // 全員で歌う部分
+    //}
+
+
 }

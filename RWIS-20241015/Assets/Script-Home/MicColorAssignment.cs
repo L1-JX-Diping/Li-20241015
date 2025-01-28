@@ -5,13 +5,14 @@ using UnityEngine.UI; // UI 扱うので
 using UnityEngine.SceneManagement;
 using TMPro; // Scene の切り替えしたい場合に必要な宣言
 
-public class MicColorAssignment : MonoBehaviour
+public class AssignmentManager : MonoBehaviour
 {
     private string _outputFileName = "MicColorInfo.txt"; // 出力ファイル名
     private List<string> _microphoneNameList = new List<string>(); // 検出されたマイク名
     private List<ColorInfo> _assignmentInfoList = new List<ColorInfo>(); // 割り当てたマイクと色の情報
-    private List<string> _colorNameList = new List<string> { "GREEN", "RED", "YELLOW" }; // 使用する色
-    private Color[] _colorList = { Color.green, Color.red, Color.yellow }; // 使用する3色
+    private Dictionary<string, string> _markColorDict = new Dictionary<string, string>();
+    private List<string> _colorNameList = new List<string> { "GREEN", "RED", "YELLOW" }; // 使用する 3 色
+    private List<string> _markList = new List<string> { "Heart", "Spade", "Diamond" }; // Heart, Spade, Diamond, Club の順で固定
 
     // インスペクターで手動で割り当てる場合に使用
     public Text _textboxMic1Color;
@@ -23,8 +24,9 @@ public class MicColorAssignment : MonoBehaviour
     [System.Serializable]
     public class ColorInfo
     {
-        public string microphone; // マイク名
         public string colorName; // 割り当てた色
+        public string microphone; // マイク名
+        public string mark; // mark 
     }
 
     void Start()
@@ -37,6 +39,8 @@ public class MicColorAssignment : MonoBehaviour
 
         // パートの色とマイクの対応を保存
         SaveColorInfoToFile();
+        // マークと色の対応を保存
+        SaveMarkDictToFile();
 
         // ボタンが押されたらこれを実行
         //GameObject.Find("ButtonStart").GetComponent<Button>().onClick.AddListener(ButtonClicked);
@@ -57,23 +61,27 @@ public class MicColorAssignment : MonoBehaviour
     private void WriteIntoTextbox()
     {
         // 名前で UI オブジェクトを探す
-        Text mic1ColorField = GameObject.Find("Color-Mic1").GetComponent<Text>();
-        Text mic1NameField = GameObject.Find("Name-Mic1").GetComponent<Text>();
+        Text mic1ColorField = GameObject.Find("Color1").GetComponent<Text>();
+        Text mic1NameField = GameObject.Find("MicName1").GetComponent<Text>();
 
-        Text mic2ColorField = GameObject.Find("Color-Mic2").GetComponent<Text>();
-        Text mic2NameField = GameObject.Find("Name-Mic2").GetComponent<Text>();
+        Text mic2ColorField = GameObject.Find("Color2").GetComponent<Text>();
+        Text mic2NameField = GameObject.Find("MicName2").GetComponent<Text>();
 
         // 
-        Text mic3ColorField = GameObject.Find("Color-Mic3").GetComponent<Text>();
-        Text mic3NameField = GameObject.Find("Name-Mic3").GetComponent<Text>();
+        Text mic3ColorField = GameObject.Find("Color3").GetComponent<Text>();
+        Text mic3NameField = GameObject.Find("MicName3").GetComponent<Text>();
 
         // mic 1
         // テキストを設定
         if (mic1ColorField != null)
         {
             string colorName = _assignmentInfoList[0].colorName;
+            Color color = NameToColor(colorName);
             mic1ColorField.text = colorName; // Color-Mic1 にパート色表示
-            mic1ColorField.color = NameToColor(colorName);
+            mic1ColorField.color = color;
+            ReflectToAvatar("Avatar1", color);
+            //_markColorDict
+            if (!_markColorDict.ContainsKey(colorName)) _markColorDict[colorName] = _markList[0];
         }
         else
         {
@@ -92,8 +100,12 @@ public class MicColorAssignment : MonoBehaviour
         if (mic2ColorField != null)
         {
             string colorName = _assignmentInfoList[1].colorName;
+            Color color = NameToColor(colorName);
             mic2ColorField.text = colorName; // Color-Mic2 にパート色表示
-            mic2ColorField.color = NameToColor(colorName);
+            mic2ColorField.color = color;
+            ReflectToAvatar("Avatar2", color);
+            //_markColorDict
+            if (!_markColorDict.ContainsKey(colorName)) _markColorDict[colorName] = _markList[1];
         }
         else
         {
@@ -124,8 +136,12 @@ public class MicColorAssignment : MonoBehaviour
                     break; // 最初に見つけた未使用の色でループを終了
                 }
             }
+            Color color = NameToColor(colorName);
             mic3ColorField.text = colorName; // Color-Mic3 にパート色表示
-            mic3ColorField.color = NameToColor(colorName);
+            mic3ColorField.color = color;
+            ReflectToAvatar("Avatar3", color);
+            //_markColorDict
+            if (!_markColorDict.ContainsKey(colorName)) _markColorDict[colorName] = _markList[2];
         }
         else
         {
@@ -148,17 +164,19 @@ public class MicColorAssignment : MonoBehaviour
         foreach (string deviceName in Microphone.devices)
         {
             // パソコン本体のマイクは含めない
+            // USB で接続されたマイクのみリストに追加したい
             if (deviceName == "マイク配列 (Realtek(R) Audio)")
             {
                 continue;
             }
 
-            // USB で接続されたマイクのみリストに追加
             _microphoneNameList.Add(deviceName);
         }
 
         if (_microphoneNameList.Count == 0)
         {
+            //string deviceName = "No_Mic";
+            //_microphoneNameList.Add(deviceName);
             Debug.LogError("No microphones detected.");
             return;
         }
@@ -185,7 +203,8 @@ public class MicColorAssignment : MonoBehaviour
             _assignmentInfoList.Add(new ColorInfo
             {
                 microphone = _microphoneNameList[i],
-                colorName = assignedColor
+                colorName = assignedColor,
+                mark = _markList[i]
             });
 
             Debug.Log($"Assigned color {assignedColor} to {_microphoneNameList[i]}");
@@ -208,6 +227,21 @@ public class MicColorAssignment : MonoBehaviour
 
         return result;
     }
+    
+    private void SaveMarkDictToFile()
+    {
+        string filePath = Path.Combine(Application.dataPath, "MarkColorDict.txt");
+
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            foreach (var markAssign in _markColorDict)
+            {
+                writer.WriteLine($"{markAssign.Key}, {markAssign.Value}");
+            }
+        }
+
+        Debug.Log($"Color information saved to {filePath}");
+    }
 
     private void SaveColorInfoToFile()
     {
@@ -215,9 +249,9 @@ public class MicColorAssignment : MonoBehaviour
 
         using (StreamWriter writer = new StreamWriter(filePath))
         {
-            foreach (var colorInfo in _assignmentInfoList)
+            foreach (ColorInfo colorInfo in _assignmentInfoList)
             {
-                writer.WriteLine($"{colorInfo.colorName}, {colorInfo.microphone}");
+                writer.WriteLine($"{colorInfo.colorName}, {colorInfo.microphone}, {colorInfo.mark}");
                 // RED, マイク (Logi C615 HD WebCam)
                 // みたいな形式で保存される
             }
@@ -236,11 +270,58 @@ public class MicColorAssignment : MonoBehaviour
             list[randomIndex] = temp;
         }
     }
+
+    void ReflectToAvatar(string objName, Color color)
+    {
+        //objName = "Avatar1" 
+        // Canvas内の objName オブジェクトを探す
+        GameObject avatarObject = GameObject.Find(objName);
+
+        // オブジェクトが見つかった場合
+        if (avatarObject != null)
+        {
+            // Imageコンポーネントを取得
+            Image avatarImage = avatarObject.GetComponent<Image>();
+
+            if (avatarImage != null)
+            {
+                // ImageのColorプロパティに色を設定
+                avatarImage.color = color;
+                Debug.Log($"Color {color} applied to {objName}.");
+            }
+            else
+            {
+                Debug.LogError($"{objName} does not have an Image component.");
+            }
+        }
+        else
+        {
+            Debug.LogError($"{objName} object not found in the scene.");
+        }
+    }
+
     Color NameToColor(string colorName)
     {
         if (colorName == "RED") return Color.red;
         if (colorName == "GREEN") return Color.green;
         if (colorName == "YELLOW") return Color.yellow;
         return Color.white;
+    }
+    string MarkToChar(string markName)
+    {
+        if (markName == "Heart") return "*";
+        if (markName == "Spade") return "!";
+        if (markName == "Diamond") return "+";
+        if (markName == "Club") return "#";
+
+        string chorusMark = "<<";
+        //string chorusMark = "";
+        //int i = 0;
+        //while (i < _playerCount)
+        //{
+        //    chorusMark += "<";
+        //    i++;
+        //}
+        return chorusMark; // 全員で歌う部分
     }
 }
